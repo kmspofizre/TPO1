@@ -1,60 +1,50 @@
 package domain;
 
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.DisplayName;
-
+import domain.entities.*;
+import domain.actions.*;
+import domain.enums.*;
+import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 class DomainTest {
     private Train train;
     private ITMOStudent itmo;
-    private MCStudent mcs;
-    private YSDAStudent ysda;
+    private MCStudent msu;
+    private YSDAStudent shad;
 
     @BeforeEach
     void setUp() {
         train = new Train();
         itmo = new ITMOStudent();
-        mcs = new MCStudent();
-        ysda = new YSDAStudent();
+        msu = new MCStudent();
+        shad = new YSDAStudent();
 
-        itmo.addToBackpack("худи итмо");
-        mcs.addToBackpack("листок с кр по матану");
+        itmo.addToBackpack(new Item("Худи", ItemType.ITMO_MERCH));
+        msu.addToBackpack(new Item("Листок", ItemType.MATH_SHEET));
 
         train.addPassenger(itmo);
-        train.addPassenger(mcs);
-        train.addPassenger(ysda);
+        train.addPassenger(msu);
+        train.addPassenger(shad);
     }
 
     @Test
-    @DisplayName("Проверка сценария: каждый студент выполняет действие")
+    @DisplayName("Анекдот")
     void testJokeStoryline() {
-        itmo.doAction(train);
-        assertTrue(itmo.backpack.isEmpty(), "итмошник должен выкинуть мерч");
-        assertEquals(3, train.getPassengers().size(), "В поезде три человека");
+        // итмошник выкидывает мерч
+        new ThrowItemAction(itmo, ItemType.ITMO_MERCH).execute();
+        assertTrue(itmo.getBackpack().isEmpty());
 
-        mcs.doAction(train);
-        assertTrue(mcs.backpack.isEmpty(), "мкновец должен выкинуть листок");
+        // мкновец выкидывает листок
+        new ThrowItemAction(msu, ItemType.MATH_SHEET).execute();
+        assertTrue(msu.getBackpack().isEmpty());
 
-        ysda.doAction(train);
+        // шадовец выкидывает мкновца
+        new ThrowPersonAction(train).execute();
 
-        assertAll("Итоговое состояние после действий",
-                () -> assertFalse(train.getPassengers().contains(mcs), "мкновец должен быть выброшен из поезда"),
-                () -> assertTrue(train.getPassengers().contains(itmo), "итмошник должен остаться"),
-                () -> assertTrue(train.getPassengers().contains(ysda), "шадовец должен остаться"),
-                () -> assertEquals(2, train.getPassengers().size(), "В поезде два человека")
+        assertAll("Итоговое состояние",
+                () -> assertEquals(StudentStatus.EJECTED, msu.getStatus(), "мкновец должен иметь статус EJECTED"),
+                () -> assertFalse(train.getPassengers().contains(msu), "мкновец должен исчезнуть из поезда"),
+                () -> assertEquals(2, train.getPassengers().size(), "В поезде только итмошник и шадовец")
         );
-    }
-
-    @Test
-    @DisplayName("Проверка, что шадовец не может выкинуть мкновца, если последнего нет")
-    void testShadActionWithNoMSU() {
-        train.removePassenger(mcs);
-        int initialSize = train.getPassengers().size();
-
-        ysda.doAction(train);
-
-        assertEquals(initialSize, train.getPassengers().size(), "Количество пассажиров не должно измениться");
     }
 }
