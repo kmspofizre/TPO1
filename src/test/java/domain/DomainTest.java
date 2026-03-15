@@ -30,21 +30,25 @@ class DomainTest {
     @Test
     @DisplayName("Анекдот")
     void testJokeStoryline() {
-        // итмошник выкидывает мерч
-        new ThrowItemAction(itmo, ItemType.ITMO_MERCH).execute();
-        assertTrue(itmo.getBackpack().isEmpty());
-
-        // мкновец выкидывает листок
-        new ThrowItemAction(msu, ItemType.MATH_SHEET).execute();
-        assertTrue(msu.getBackpack().isEmpty());
-
-        // шадовец выкидывает мкновца
-        new ThrowPersonAction(train).execute();
+        tellJokeStory();
 
         assertAll("Итоговое состояние",
+                () -> assertTrue(itmo.getBackpack().isEmpty()),
+                () -> assertTrue(msu.getBackpack().isEmpty()),
                 () -> assertEquals(StudentStatus.EJECTED, msu.getStatus(), "мкновец должен иметь статус EJECTED"),
                 () -> assertFalse(train.getPassengers().contains(msu), "мкновец должен исчезнуть из поезда"),
                 () -> assertEquals(2, train.getPassengers().size(), "В поезде только итмошник и шадовец")
         );
+    }
+
+    private void tellJokeStory() {
+        // итмошник выкидывает мерч
+        new ThrowItemAction(itmo, ItemType.ITMO_MERCH).execute();
+
+        // мкновец выкидывает листок
+        new ThrowItemAction(msu, ItemType.MATH_SHEET).execute();
+
+        // шадовец выкидывает мкновца
+        new ThrowPersonAction(train).execute();
     }
 }
